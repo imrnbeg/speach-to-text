@@ -44,11 +44,9 @@
   <button id="stopBtn">✋ रोकें</button>
   <button id="clearBtn">🗑️ साफ़ करें</button>
 
- <script>
+<script>
 let recognition;
 let finalTranscript = '';
-let previousFinals = new Set();
-
 const transcriptDiv = document.getElementById('transcript');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
@@ -66,11 +64,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript.trim();
       if (event.results[i].isFinal) {
-        // Only add if not already spoken
-        if (!previousFinals.has(transcript)) {
-          previousFinals.add(transcript);
-          finalTranscript += transcript + '\n';
-        }
+        finalTranscript += transcript + '\n';
       } else {
         interim += transcript;
       }
@@ -94,7 +88,6 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
   clearBtn.onclick = () => {
     finalTranscript = '';
-    previousFinals.clear();
     transcriptDiv.innerText = '';
   };
 } else {
@@ -104,5 +97,6 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   clearBtn.disabled = true;
 }
 </script>
+
 </body>
 </html>
