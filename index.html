@@ -1,6 +1,12 @@
+<script>
 let recognition;
 let finalTranscript = '';
 let lastFinalResult = '';
+
+const transcriptDiv = document.getElementById('transcript');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const clearBtn = document.getElementById('clearBtn');
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -15,7 +21,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const transcript = event.results[i][0].transcript.trim();
 
       if (event.results[i].isFinal) {
-        // Prevent duplicates by checking last added line
+        // Prevent duplicates
         if (transcript !== lastFinalResult) {
           finalTranscript += transcript + '\n';
           lastFinalResult = transcript;
@@ -47,4 +53,10 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     lastFinalResult = '';
     transcriptDiv.innerText = '';
   };
+} else {
+  transcriptDiv.innerText = "⚠️ आपका ब्राउज़र आवाज़ पहचान का समर्थन नहीं करता।";
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+  clearBtn.disabled = true;
 }
+</script>
