@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>हिंदी आवाज़ से लिखावट</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f0f0f0;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    #transcript {
+      background: white;
+      padding: 1rem;
+      font-size: 1.5rem;
+      border: 1px solid #ccc;
+      min-height: 150px;
+      white-space: pre-wrap;
+      line-height: 2rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      margin-right: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #startBtn { background-color: #28a745; color: white; }
+    #stopBtn { background-color: #dc3545; color: white; }
+    #clearBtn { background-color: #ffc107; color: black; }
+  </style>
+</head>
+<body>
+  <h1>🎤 हिंदी आवाज़ से लिखावट</h1>
+  <div id="transcript">शुरू करने के लिए "सुनना शुरू करें" दबाएं…</div>
+  <button id="startBtn">🔊 सुनना शुरू करें</button>
+  <button id="stopBtn">✋ रोकें</button>
+  <button id="clearBtn">🗑️ साफ़ करें</button>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const transcriptDiv = document.getElementById('transcript');
+
+    let recognition;
+    let finalTranscript = '';
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'hi-IN';
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const text = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += text + '\n';
+          } else {
+            interim += text;
+          }
+        }
+        transcriptDiv.innerText = finalTranscript + interim;
+      };
+
+      recognition.onerror = (e) => {
+        transcriptDiv.innerText += `\n⚠️ त्रुटि: ${e.error}`;
+      };
+
+      startBtn.onclick = () => {
+        recognition.start();
+        transcriptDiv.innerText += '\n🎤 सुनना शुरू...\n';
+      };
+
+      stopBtn.onclick = () => {
+        recognition.stop();
+        transcriptDiv.innerText += '\n🛑 सुनना बंद...\n';
+      };
+
+      clearBtn.onclick = () => {
+        finalTranscript = '';
+        transcriptDiv.innerText = '';
+      };
+    } else {
+      transcriptDiv.innerText = "⚠️ आपका ब्राउज़र आवाज़ पहचान का समर्थन नहीं करता।";
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
+      clearBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>
