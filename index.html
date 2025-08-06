@@ -43,63 +43,74 @@
   <button id="startBtn">🔊 सुनना शुरू करें</button>
   <button id="stopBtn">✋ रोकें</button>
   <button id="clearBtn">🗑️ साफ़ करें</button>
-
   <script>
     let recognition;
     let finalTranscript = '';
-    const seenFinals = new Set();
-
+    let lastProcessedIndex = -1;
     const transcriptDiv = document.getElementById('transcript');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const clearBtn = document.getElementById('clearBtn');
-
+    
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'hi-IN';
-
+      recognition.maxAlternatives = 1;
+      
       recognition.onresult = (event) => {
         let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        
+        // Only process new results beyond what we've already processed
+        for (let i = Math.max(event.resultIndex, lastProcessedIndex + 1); i < event.results.length; i++) {
           const result = event.results[i];
           const transcript = result[0].transcript.trim();
-
-          if (result.isFinal) {
-            const key = `${i}|${transcript}`;
-            if (!seenFinals.has(key)) {
-              seenFinals.add(key);
-              finalTranscript += transcript + '\n';
-            }
-          } else {
+          
+          if (result.isFinal && transcript) {
+            finalTranscript += transcript + '\n';
+            lastProcessedIndex = i;
+          } else if (!result.isFinal) {
             interim += transcript;
           }
         }
+        
+        // Display final + current interim
         transcriptDiv.innerText = finalTranscript + interim;
       };
-
+      
+      recognition.onstart = () => {
+        transcriptDiv.innerText = finalTranscript + '\n🎤 सुनना शुरू...\n';
+      };
+      
+      recognition.onend = () => {
+        transcriptDiv.innerText = finalTranscript + '\n🛑 सुनना बंद...\n';
+      };
+      
       recognition.onerror = (e) => {
-        transcriptDiv.innerText += `\n⚠️ त्रुटि: ${e.error}`;
+        transcriptDiv.innerText = finalTranscript + `\n⚠️ त्रुटि: ${e.error}\n`;
       };
-
+      
       startBtn.onclick = () => {
-        seenFinals.clear();
-        recognition.start();
-        transcriptDiv.innerText += '\n🎤 सुनना शुरू...\n';
+        lastProcessedIndex = -1;
+        try {
+          recognition.start();
+        } catch (e) {
+          console.log('Recognition already started');
+        }
       };
-
+      
       stopBtn.onclick = () => {
         recognition.stop();
-        transcriptDiv.innerText += '\n🛑 सुनना बंद...\n';
       };
-
+      
       clearBtn.onclick = () => {
         finalTranscript = '';
-        seenFinals.clear();
+        lastProcessedIndex = -1;
         transcriptDiv.innerText = '';
       };
+      
     } else {
       transcriptDiv.innerText = "⚠️ आपका ब्राउज़र आवाज़ पहचान का समर्थन नहीं करता।";
       startBtn.disabled = true;
